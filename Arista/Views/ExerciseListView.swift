@@ -15,15 +15,16 @@ struct ExerciseListView: View {
         NavigationView {
             List(viewModel.exercises) { exercise in
                 HStack {
-                    Image(systemName: iconForCategory(exercise.category))
+                    Image(systemName: iconForCategory(exercise.category ?? "questionmark"))
                     VStack(alignment: .leading) {
-                        Text(exercise.category)
+                        Text(exercise.category ?? "questionmark")
                             .font(.headline)
                         Text("Durée: \(exercise.duration) min")
                             .font(.subheadline)
-                        Text(exercise.date.formatted())
-                            .font(.subheadline)
-                        
+                        if let startDate = exercise.startDate {
+                            Text(startDate.formatted())
+                                .font(.subheadline)
+                        }
                     }
                     Spacer()
                     IntensityIndicator(intensity: exercise.intensity)
@@ -36,7 +37,7 @@ struct ExerciseListView: View {
                 Image(systemName: "plus")
             })
         }
-        .sheet(isPresented: $showingAddExerciseView) {
+        .sheet(isPresented: $showingAddExerciseView, onDismiss: viewModel.reload) {
             AddExerciseView(viewModel: AddExerciseViewModel(context: viewModel.viewContext))
         }
         
@@ -61,7 +62,7 @@ struct ExerciseListView: View {
 }
 
 struct IntensityIndicator: View {
-    var intensity: Int
+    var intensity: Int64
     
     var body: some View {
         Circle()
@@ -69,7 +70,7 @@ struct IntensityIndicator: View {
             .frame(width: 10, height: 10)
     }
     
-    func colorForIntensity(_ intensity: Int) -> Color {
+    func colorForIntensity(_ intensity: Int64) -> Color {
         switch intensity {
         case 0...3:
             return .green
