@@ -18,8 +18,9 @@ struct PersistenceController {
         } catch {
             // Replace this implementation with code to handle the error appropriately.
             // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-            let nsError = error as NSError
-            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            //let nsError = error as NSError
+            //fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            print("Failed to save data: \(error.localizedDescription)")
         }
         return result
     }()
@@ -44,11 +45,17 @@ struct PersistenceController {
                  * The store could not be migrated to the current model version.
                  Check the error message to determine what the actual problem was.
                  */
-                fatalError("Unresolved error \(error), \(error.userInfo)")
+                //fatalError("Unresolved error \(error), \(error.userInfo)")
+                
+                print("Failed to load Persistent Container: \(error.localizedDescription)")
             }
         })
         container.viewContext.automaticallyMergesChangesFromParent = true
         
+        if inMemory == false {
+
         try! DefaultData(viewContext: container.viewContext).apply()
+
+        }
     }
 }
