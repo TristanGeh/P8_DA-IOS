@@ -12,16 +12,16 @@ class UserDataViewModel: ObservableObject {
     @Published var firstName: String = ""
     @Published var lastName: String = ""
     
-    private var viewContext: NSManagedObjectContext
+    private var fetchRequestContext: FetchRequestContext
     
-    init(context: NSManagedObjectContext) {
-        self.viewContext = context
+    init(fetchRequestContext: FetchRequestContext) {
+        self.fetchRequestContext = fetchRequestContext
         fetchUserData()
     }
     
-    private func fetchUserData() {
+    func fetchUserData() {
         do {
-            guard let user = try UserRepository(viewContext: viewContext).getUser() else {
+            guard let user = try UserRepository(fetchRequestContext: fetchRequestContext).getUser() else {
                 print("User not found")
                 return
             }

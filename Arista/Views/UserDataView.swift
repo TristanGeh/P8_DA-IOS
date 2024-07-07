@@ -29,5 +29,8 @@ struct UserDataView: View {
 }
 
 #Preview {
-    UserDataView(viewModel: UserDataViewModel(context: PersistenceController.preview.container.viewContext))
+    let context = PersistenceController.preview.container.viewContext
+    let fetchRequestContext = CoreDataFetchRequestContext(context: context)
+    let viewModel = UserDataViewModel(fetchRequestContext: fetchRequestContext)
+    return UserDataView(viewModel: viewModel)
 }

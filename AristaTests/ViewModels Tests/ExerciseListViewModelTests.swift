@@ -1,18 +1,21 @@
 //
-//  ExerciseRepositoryTests.swift
+//  ExerciseListViewModelTests.swift
 //  AristaTests
 //
-//  Created by Tristan Géhanne on 21/06/2024.
+//  Created by Tristan Géhanne on 24/06/2024.
 //
 
 import XCTest
+
 import CoreData
+
+import Combine
+
 @testable import Arista
 
-
-final class ExerciseRepositoryTests: XCTestCase {
+final class ExerciseListViewModelTests: XCTestCase {
     
-    // MARK: - Utility Functions
+    // MARK: - Utilities functions
     
     private func emptyEntities(context: NSManagedObjectContext) {
         
@@ -21,11 +24,14 @@ final class ExerciseRepositoryTests: XCTestCase {
         let objects = try! context.fetch(fetchRequest)
         
         
+        
         for exercice in objects {
             
             context.delete(exercice)
             
         }
+        
+        
         
         try! context.save()
         
@@ -59,9 +65,25 @@ final class ExerciseRepositoryTests: XCTestCase {
         
     }
     
-    // MARK: - GetExercise Tests
     
-    func test_WhenNoExerciseIsInDatabase_GetExercise_ReturnEmptyList() {
+    
+    var cancellables = Set<AnyCancellable>()
+    
+    override func setUpWithError() throws {
+        
+        // Put setup code here. This method is called before the invocation of each test method in the class.
+        
+    }
+    
+    override func tearDownWithError() throws {
+        
+        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        
+    }
+    
+    // MARK: - Fetch Exerices Tests
+    
+    func test_WhenNoExerciseIsInDatabase_FetchExercise_ReturnEmptyList() {
         
         // Clean manually all data
         
@@ -69,15 +91,33 @@ final class ExerciseRepositoryTests: XCTestCase {
         
         emptyEntities(context: persistenceController.container.viewContext)
         
-        let data = ExerciseRepository(viewContext: persistenceController.container.viewContext)
+        let viewModel = ExerciseListViewModel(context: persistenceController.container.viewContext)
         
-        let exercises = try! data.getExercise()
+        let expectation = XCTestExpectation(description: "fetch empty list of exercise")
         
-        XCTAssert(exercises.isEmpty == true)
+        
+        
+        viewModel.$exercises
+        
+            .sink { exercises in
+                
+                XCTAssert(exercises.isEmpty)
+                
+                expectation.fulfill()
+                
+            }
+        
+            .store(in: &cancellables)
+        
+        
+        
+        wait(for: [expectation], timeout: 10)
         
     }
     
-    func test_WhenAddingOneExerciseInDatabase_GetExercise_ReturnAListContainingTheExercise() {
+    
+    
+    func test_WhenAddingOneExerciseInDatabase_FetchExercise_ReturnAListContainingTheExercise() {
         
         // Clean manually all data
         
@@ -87,29 +127,47 @@ final class ExerciseRepositoryTests: XCTestCase {
         
         let date = Date()
         
-        addExercice(context: persistenceController.container.viewContext, category: "Football", duration: 10, intensity: 5, startDate: date, userFirstName: "Eric", userLastName: "Marcus")
+        addExercice(context: persistenceController.container.viewContext,
+                    
+                    category: "Football", duration: 10, intensity: 5, startDate: date, userFirstName: "Ericw", userLastName: "Marcus")
         
         
         
-        let data = ExerciseRepository(viewContext: persistenceController.container.viewContext)
+        let viewModel = ExerciseListViewModel(context: persistenceController.container.viewContext)
         
-        let exercises = try! data.getExercise()
+        let expectation = XCTestExpectation(description: "fetch list of exercise")
         
         
         
-        XCTAssert(exercises.isEmpty == false)
+        viewModel.$exercises
         
-        XCTAssert(exercises.first?.category == "Football")
+            .sink { exercises in
+                
+                XCTAssert(exercises.isEmpty == false)
+                
+                XCTAssert(exercises.first?.category == "Football")
+                
+                XCTAssert(exercises.first?.duration == 10)
+                
+                XCTAssert(exercises.first?.intensity == 5)
+                
+                XCTAssert(exercises.first?.startDate == date)
+                
+                expectation.fulfill()
+                
+            }
         
-        XCTAssert(exercises.first?.duration == 10)
+            .store(in: &cancellables)
         
-        XCTAssert(exercises.first?.intensity == 5)
         
-        XCTAssert(exercises.first?.startDate == date)
+        
+        wait(for: [expectation], timeout: 10)
         
     }
     
-    func test_WhenAddingMultipleExerciseInDatabase_GetExercise_ReturnAListContainingTheExerciseInTheRightOrder() {
+    
+    
+    func test_WhenAddingMultipleExerciseInDatabase_FetchExercise_ReturnAListContainingTheExerciseInTheRightOrder() {
         
         // Clean manually all data
         
@@ -135,7 +193,7 @@ final class ExerciseRepositoryTests: XCTestCase {
                     
                     startDate: date1,
                     
-                    userFirstName: "Erica",
+                    userFirstName: "Ericn",
                     
                     userLastName: "Marcusi")
         
@@ -149,7 +207,7 @@ final class ExerciseRepositoryTests: XCTestCase {
                     
                     startDate: date3,
                     
-                    userFirstName: "Erice",
+                    userFirstName: "Ericb",
                     
                     userLastName: "Marceau")
         
@@ -163,69 +221,39 @@ final class ExerciseRepositoryTests: XCTestCase {
                     
                     startDate: date2,
                     
-                    userFirstName: "Frédericd",
+                    userFirstName: "Frédericp",
                     
                     userLastName: "Marcus")
         
         
         
-        let data = ExerciseRepository(viewContext: persistenceController.container.viewContext)
+        let viewModel = ExerciseListViewModel(context: persistenceController.container.viewContext)
         
-        let exercises = try! data.getExercise()
+        let expectation = XCTestExpectation(description: "fetch empty list of exercise")
         
         
         
-        XCTAssert(exercises.count == 3)
+        viewModel.$exercises
         
-        XCTAssert(exercises[0].category == "Football")
+            .sink { exercises in
+                
+                XCTAssert(exercises.count == 3)
+                
+                XCTAssert(exercises[0].category == "Football")
+                
+                XCTAssert(exercises[1].category == "Fitness")
+                
+                XCTAssert(exercises[2].category == "Running")
+                
+                expectation.fulfill()
+                
+            }
         
-        XCTAssert(exercises[1].category == "Fitness")
+            .store(in: &cancellables)
         
-        XCTAssert(exercises[2].category == "Running")
-
+        
+        
+        wait(for: [expectation], timeout: 10)
+        
     }
-    
-    // MARK: - addExercise Tests
-    
-    func test_WhenAddingOneExerciseInDatabase_AddExercise_ReturnOneExericse() {
-        
-        // Clean manually all data
-        
-        let persistenceController = PersistenceController(inMemory: true)
-    
-        emptyEntities(context: persistenceController.container.viewContext)
-        
-        // Arrange
-        let context: NSManagedObjectContext = persistenceController.container.viewContext
-        
-        let date = Date()
-        let exerciseRepository = ExerciseRepository(viewContext: context)
-        
-        
-        try! exerciseRepository.addExercise(category: "Natation",
-                                            
-                                            duration: 29,
-                                            
-                                            intensity: 8,
-                                            
-                                            startDate: date)
-        // Act
-        
-        let data = ExerciseRepository(viewContext: persistenceController.container.viewContext)
-        
-        let exercise = try! data.getExercise()
-        
-        // Tests
-        
-        XCTAssert(exercise.count == 1)
-        
-        XCTAssert(exercise[0].category == "Natation")
-        
-        XCTAssert(exercise[0].duration == 29)
-        
-        XCTAssert(exercise[0].intensity == 8)
-        
-        XCTAssert(exercise[0].startDate == date)
-    }
-    
 }

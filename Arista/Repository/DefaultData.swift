@@ -9,12 +9,16 @@ import Foundation
 import CoreData
 struct DefaultData {
     let viewContext: NSManagedObjectContext
-    init(viewContext: NSManagedObjectContext = PersistenceController.shared.container.viewContext) {
-        self.viewContext = viewContext
-    }
+        let fetchRequestContext: CoreDataFetchRequestContext
+        let userRepository: UserRepository
+        
+        init(viewContext: NSManagedObjectContext = PersistenceController.shared.container.viewContext) {
+            self.viewContext = viewContext
+            self.fetchRequestContext = CoreDataFetchRequestContext(context: viewContext)
+            self.userRepository = UserRepository(fetchRequestContext: fetchRequestContext)
+        }
     
     func apply() throws {
-        let userRepository = UserRepository(viewContext: viewContext)
         let sleepRepository = SleepRepository(viewContext: viewContext)
         if (try? userRepository.getUser()) == nil {
             let initialUser = User(context: viewContext)
