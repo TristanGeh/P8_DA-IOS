@@ -10,9 +10,11 @@ import CoreData
 
 class AddExerciseViewModel: ObservableObject {
     @Published var category: String = ""
-    @Published var startTime: Date = Date()
-    @Published var duration: Int64 = 0
-    @Published var intensity: Int64 = 0
+    @Published var startTimeString: String = ""
+    @Published var durationString : String = ""
+    @Published var intensityString: String = ""
+    @Published var validationError: String? = nil
+    
     private var viewContext: NSManagedObjectContext
     init(context: NSManagedObjectContext) {
         self.viewContext = context
@@ -24,41 +26,65 @@ class AddExerciseViewModel: ObservableObject {
         return formatter
     }()
     
-    var startTimeString: String {
+    var startTime: Date {
         get {
-            dateFormatter.string(from: startTime)
+            dateFormatter.date(from: startTimeString) ?? Date()
         }
         set {
-            if let date = dateFormatter.date(from: newValue){
-                startTime = date
-            }
+            startTimeString = dateFormatter.string(from: newValue)
         }
     }
     
-    var durationString: String {
+    var duration: Int64 {
         get {
-            String(duration)
+            Int64(durationString) ?? 0
         }
         set {
-            if let intValue = Int64(newValue){
-                duration = intValue
-            }
+            durationString = String(newValue)
         }
     }
     
-    var intensityString: String {
+    var intensity: Int64 {
         get {
-            String(intensity)
+            Int64(intensityString) ?? 0
         }
         set {
-            if let intValue = Int64(newValue){
-                intensity = intValue
-            }
+            intensityString = String(newValue)
         }
     }
     // MARK: - Functions
     
+    func validate() -> Bool {
+        validationError = nil
+        
+        if category.isEmpty {
+            validationError = "La catégorie est requise."
+            return false
+        }
+        if !isValidTimeFormat(startTimeString) {
+            validationError = "Le format de l'heure de démarrage est incorrect. Utilisez HH:mm."
+            return false
+        }
+        
+        if duration <= 0 {
+            validationError = "La durée doit être supérieure à 0."
+            return false
+        }
+        
+        if intensityString.isEmpty || intensity < 0 || intensity > 10 {
+            validationError = "L'intensité doit être entre 0 et 10."
+            return false
+        }
+        
+        return true
+    }
+    
     func addExercise() -> Bool {
+        
+        guard validate() else {
+            return false
+        }
+        
         do {
             try ExerciseRepository(viewContext: viewContext).addExercise(category: category, duration: duration, intensity: intensity, startDate: startTime)
             return true
@@ -66,5 +92,11 @@ class AddExerciseViewModel: ObservableObject {
             print("Failed to add Exercise: \(error.localizedDescription)")
             return false
         }
+    }
+    
+    private func isValidTimeFormat(_ time: String) -> Bool {
+        let timeFormat = "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+        let predicate = NSPredicate(format: "SELF MATCHES %@", timeFormat)
+        return predicate.evaluate(with: time)
     }
 }

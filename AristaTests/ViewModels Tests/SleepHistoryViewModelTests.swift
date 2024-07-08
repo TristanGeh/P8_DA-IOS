@@ -54,8 +54,7 @@ final class SleepHistoryViewModelTests: XCTestCase {
         let persistenceController = PersistenceController(inMemory: true)
         
         emptyEntities(context: persistenceController.container.viewContext)
-        
-        let date = Date()
+
         let context = persistenceController.container.viewContext
         
         let viewModel = SleepHistoryViewModel(context: context)

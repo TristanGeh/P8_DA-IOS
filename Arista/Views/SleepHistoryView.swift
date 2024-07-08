@@ -11,19 +11,21 @@ struct SleepHistoryView: View {
     @ObservedObject var viewModel: SleepHistoryViewModel
 
         var body: some View {
-            List(viewModel.sleepSessions) { session in
-                HStack {
-                    QualityIndicator(quality: session.quality)
-                        .padding()
-                    VStack(alignment: .leading) {
-                        if let startDate = session.startDate {
-                            Text("Début : \(startDate.formatted())")
+            NavigationView{
+                List(viewModel.sleepSessions) { session in
+                    HStack {
+                        QualityIndicator(quality: session.quality)
+                            .padding()
+                        VStack(alignment: .leading) {
+                            Text("Durée : \(session.duration/60) heures")
+                            if let startDate = session.startDate {
+                                Text("Début : \(startDate.formatted())")
+                            }
                         }
-                        Text("Durée : \(session.duration/60) heures")
                     }
                 }
+                .navigationTitle("Historique de Sommeil")
             }
-            .navigationTitle("Historique de Sommeil")
         }
 }
 
